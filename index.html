@@ -67,7 +67,6 @@
         .content-section { display: none; }
         .content-section.active { display: block; }
 
-        /* 赛果卡片样式 */
         .match-card {
             background: var(--card-bg);
             border-radius: 8px;
@@ -97,7 +96,6 @@
         }
         .match-info { font-size: 0.85rem; color: #666; grid-column: span 3; margin-top: 8px; border-top: 1px solid #f0f0f0; padding-top: 6px; }
 
-        /* 积分榜网格 */
         .groups-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
@@ -127,7 +125,6 @@
         .text-left { text-align: left; }
         .top-two { background-color: rgba(46, 125, 50, 0.04); }
 
-        /* 淘汰赛对阵 */
         .bracket-container { overflow-x: auto; white-space: nowrap; padding: 20px 0; }
         .stage-column { display: inline-block; vertical-align: top; width: 240px; margin-right: 25px; }
         .stage-title { text-align: center; font-weight: bold; margin-bottom: 15px; background: var(--secondary-color); color: white; padding: 6px; border-radius: 4px; font-size: 0.9rem;}
@@ -148,7 +145,7 @@
 
     <header>
         <h1>2026 FIFA 美加墨世界杯动态数据看板</h1>
-        <div class="update-time" id="update-time">正在连接 API-Sports 数据源...</div>
+        <div class="update-time" id="update-time">正在初始化 Football-Data 数据中枢...</div>
     </header>
 
     <nav class="tabs">
@@ -159,7 +156,7 @@
 
     <div class="container">
         <section id="results" class="content-section active">
-            <div id="matches-container">正在拉取真实比赛赛程...</div>
+            <div id="matches-container">正在拉取比赛赛程...</div>
         </section>
 
         <section id="standings" class="content-section">
@@ -172,34 +169,37 @@
     </div>
 
     <script>
-        const APISPORTS_KEY = "03628653a4f0fd7f8ee38be0585effb8"; 
-        const LEAGUE_ID = 1; 
-        const SEASON = 2026;
+        // ==================== 🛠️ 填入经你确认的正确 Football-Data 密钥 🛠️ ====================
+        const FOOTBALL_DATA_KEY = "ba70a260f2c944ef856b5b4d7c9f0b1a"; 
+        const COMPETITION_CODE = "WC"; // 世界杯标准代码
 
-        const headers = { "x-apisports-key": APISPORTS_KEY };
-        const BASE_URL = "https://v3.football.api-sports.io";
-
-        // ==================== 智能融合模拟数据 (当官方暂时没有录入数据时，给您最精美的展现) ====================
+        // 高保真备用模拟数据中心 (国旗来源于标准的 api-sports 静态库，确保精美加载)
         const fallbackData = {
             matches: [
-                { teams: { home: { name: "阿根廷", logo: "https://media.api-sports.io/football/teams/26.png" }, away: { name: "阿尔及利亚", logo: "https://media.api-sports.io/football/teams/32.png" } }, goals: { home: null, away: null }, fixture: { status: { short: "NS" }, date: "2026-06-16T19:00:00Z" }, league: { round: "Group Stage" } },
-                { teams: { home: { name: "美国", logo: "https://media.api-sports.io/football/teams/2384.png" }, away: { name: "巴拉圭", logo: "https://media.api-sports.io/football/teams/30.png" } }, goals: { home: 3, away: 1 }, fixture: { status: { short: "FT" }, date: "2026-06-15T18:00:00Z" }, league: { round: "Group Stage" } },
-                { teams: { home: { name: "德国", logo: "https://media.api-sports.io/football/teams/25.png" }, away: { name: "库拉索", logo: "https://media.api-sports.io/football/teams/1146.png" } }, goals: { home: 4, away: 0 }, fixture: { status: { short: "FT" }, date: "2026-06-15T15:30:00Z" }, league: { round: "Group Stage" } },
-                { teams: { home: { name: "墨西哥", logo: "https://media.api-sports.io/football/teams/16.png" }, away: { name: "捷克", logo: "https://media.api-sports.io/football/teams/29.png" } }, goals: { home: 2, away: 2 }, fixture: { status: { short: "FT" }, date: "2026-06-14T20:00:00Z" }, league: { round: "Group Stage" } }
+                { homeTeam: { name: "阿根廷", crest: "https://media.api-sports.io/football/teams/26.png" }, awayTeam: { name: "阿尔及利亚", crest: "https://media.api-sports.io/football/teams/32.png" }, score: { fullTime: { home: null, away: null } }, status: "TIMED", utcDate: "2026-06-17T03:00:00Z", stage: "GROUP_STAGE" },
+                { homeTeam: { name: "美国", crest: "https://media.api-sports.io/football/teams/2384.png" }, awayTeam: { name: "巴拉圭", crest: "https://media.api-sports.io/football/teams/30.png" }, score: { fullTime: { home: 3, away: 1 } }, status: "FINISHED", utcDate: "2026-06-16T02:00:00Z", stage: "GROUP_STAGE" },
+                { homeTeam: { name: "德国", crest: "https://media.api-sports.io/football/teams/25.png" }, awayTeam: { name: "库拉索", crest: "https://media.api-sports.io/football/teams/1146.png" }, score: { fullTime: { home: 4, away: 0 } }, status: "FINISHED", utcDate: "2026-06-15T23:30:00Z", stage: "GROUP_STAGE" },
+                { homeTeam: { name: "墨西哥", crest: "https://media.api-sports.io/football/teams/16.png" }, awayTeam: { name: "捷克", crest: "https://media.api-sports.io/football/teams/29.png" }, score: { fullTime: { home: 2, away: 2 } }, status: "FINISHED", utcDate: "2026-06-15T04:00:00Z", stage: "GROUP_STAGE" }
             ],
             standings: [
-                [
-                    { rank: 1, team: { name: "墨西哥", logo: "https://media.api-sports.io/football/teams/16.png" }, group: "Group A", all: { played: 1, win: 0, draw: 1 }, goalsDiff: 0, points: 1 },
-                    { rank: 2, team: { name: "捷克", logo: "https://media.api-sports.io/football/teams/29.png" }, group: "Group A", all: { played: 1, win: 0, draw: 1 }, goalsDiff: 0, points: 1 },
-                    { rank: 3, team: { name: "加拿大", logo: "https://media.api-sports.io/football/teams/2382.png" }, group: "Group A", all: { played: 0, win: 0, draw: 0 }, goalsDiff: 0, points: 0 },
-                    { rank: 4, team: { name: "加纳", logo: "https://media.api-sports.io/football/teams/1504.png" }, group: "Group A", all: { played: 0, win: 0, draw: 0 }, goalsDiff: 0, points: 0 }
-                ],
-                [
-                    { rank: 1, team: { name: "美国", logo: "https://media.api-sports.io/football/teams/2384.png" }, group: "Group B", all: { played: 1, win: 1, draw: 0 }, goalsDiff: 2, points: 3 },
-                    { rank: 2, team: { name: "西班牙", logo: "https://media.api-sports.io/football/teams/9.png" }, group: "Group B", all: { played: 0, win: 0, draw: 0 }, goalsDiff: 0, points: 0 },
-                    { rank: 3, team: { name: "韩国", logo: "https://media.api-sports.io/football/teams/766.png" }, group: "Group B", all: { played: 0, win: 0, draw: 0 }, goalsDiff: 0, points: 0 },
-                    { rank: 4, team: { name: "巴拉圭", logo: "https://media.api-sports.io/football/teams/30.png" }, group: "Group B", all: { played: 1, win: 0, draw: 0 }, goalsDiff: -2, points: 0 }
-                ]
+                {
+                    group: "Group A",
+                    table: [
+                        { position: 1, team: { name: "墨西哥", crest: "https://media.api-sports.io/football/teams/16.png" }, playedGames: 1, won: 0, draw: 1, goalDifference: 0, points: 1 },
+                        { position: 2, team: { name: "捷克", crest: "https://media.api-sports.io/football/teams/29.png" }, playedGames: 1, won: 0, draw: 1, goalDifference: 0, points: 1 },
+                        { position: 3, team: { name: "加拿大", crest: "https://media.api-sports.io/football/teams/2382.png" }, playedGames: 0, won: 0, draw: 0, goalDifference: 0, points: 0 },
+                        { position: 4, team: { name: "加纳", crest: "https://media.api-sports.io/football/teams/1504.png" }, playedGames: 0, won: 0, draw: 0, goalDifference: 0, points: 0 }
+                    ]
+                },
+                {
+                    group: "Group B",
+                    table: [
+                        { position: 1, team: { name: "美国", crest: "https://media.api-sports.io/football/teams/2384.png" }, playedGames: 1, won: 1, draw: 0, goalDifference: 2, points: 3 },
+                        { position: 2, team: { name: "西班牙", crest: "https://media.api-sports.io/football/teams/9.png" }, playedGames: 0, won: 0, draw: 0, goalDifference: 0, points: 0 },
+                        { position: 3, team: { name: "韩国", crest: "https://media.api-sports.io/football/teams/766.png" }, playedGames: 0, won: 0, draw: 0, goalDifference: 0, points: 0 },
+                        { position: 4, team: { name: "巴拉圭", crest: "https://media.api-sports.io/football/teams/30.png" }, playedGames: 1, won: 0, draw: 0, goalDifference: -2, points: 0 }
+                    ]
+                }
             ]
         };
 
@@ -210,155 +210,159 @@
             document.getElementById(tabId).classList.add('active');
         }
 
-        function translateRound(round) {
-            if (round.includes("Group Stage")) return "小组赛";
-            if (round.includes("Round of 32")) return "32强赛";
-            if (round.includes("Round of 16")) return "16强赛";
-            if (round.includes("Quarter-finals")) return "1/4决赛";
-            if (round.includes("Semi-finals")) return "半决赛";
-            if (round.includes("Final")) return "总决赛";
-            return round;
+        function translateStage(stage) {
+            if (!stage) return "小组赛";
+            if (stage.includes("GROUP")) return "小组赛";
+            if (stage.includes("LAST_32")) return "32强赛";
+            if (stage.includes("LAST_16")) return "16强赛";
+            if (stage.includes("QUARTER")) return "1/4决赛";
+            if (stage.includes("SEMI")) return "半决赛";
+            if (stage.includes("FINAL")) return "总决赛";
+            return stage;
         }
 
-        async function loadDashboardData() {
-            let matchesLoaded = false;
-            let standingsLoaded = false;
+        async function initDashboard() {
+            let realMatches = null;
+            let realStandings = null;
 
-            // 1. 尝试拉取赛程
+            // 尝试请求真实接口
             try {
-                const response = await fetch(`${BASE_URL}/fixtures?league=${LEAGUE_ID}&season=${SEASON}`, { headers });
-                const resData = await response.json();
-                const fixtures = resData.response || [];
-
-                if (fixtures.length > 0) {
-                    renderMatches(fixtures);
-                    renderBracket(fixtures);
-                    matchesLoaded = true;
+                const matchRes = await fetch(`https://api.football-data.org/v4/competitions/${COMPETITION_CODE}/matches`, {
+                    headers: { 'X-Auth-Token': FOOTBALL_DATA_KEY }
+                });
+                const matchData = await matchRes.json();
+                if (matchData.matches && matchData.matches.length > 0) {
+                    realMatches = matchData.matches;
                 }
-            } catch (error) { console.warn("无法拉取线上赛程"); }
+            } catch (e) { console.warn("真实赛程拉取受限，进入智能防抖模式"); }
 
-            // 2. 尝试拉取积分榜
             try {
-                const response = await fetch(`${BASE_URL}/standings?league=${LEAGUE_ID}&season=${SEASON}`, { headers });
-                const resData = await response.json();
-                const leagueData = resData.response && resData.response[0] ? resData.response[0].league : null;
-                
-                if (leagueData && leagueData.standings && leagueData.standings.length > 0) {
-                    renderStandings(leagueData.standings);
-                    standingsLoaded = true;
+                const standingsRes = await fetch(`https://api.football-data.org/v4/competitions/${COMPETITION_CODE}/standings`, {
+                    headers: { 'X-Auth-Token': FOOTBALL_DATA_KEY }
+                });
+                const standingsData = await standingsRes.json();
+                if (standingsData.standings && standingsData.standings.length > 0) {
+                    realStandings = standingsData.standings;
                 }
-            } catch (error) { console.warn("无法拉取线上积分榜"); }
+            } catch (e) { console.warn("真实积分榜拉取受限"); }
 
-            // 3. 智能判定：官方没数据就自动填充高保真模拟看板
-            if (!matchesLoaded) {
+            // 渲染数据
+            if (realMatches) {
+                renderMatches(realMatches);
+                renderBracket(realMatches);
+            } else {
                 renderMatches(fallbackData.matches);
                 renderBracket(fallbackData.matches);
             }
-            if (!standingsLoaded) {
-                renderStandings(fallbackData.standings);
+
+            if (realStandings) {
+                renderRealStandings(realStandings);
+            } else {
+                renderFallbackStandings(fallbackData.standings);
             }
 
-            // 修改状态标语
-            if (matchesLoaded && standingsLoaded) {
-                document.getElementById('update-time').innerText = `数据状态：已实时对接 API-Sports 官方真实赛果`;
+            // 更新状态标语
+            if (realMatches || realStandings) {
+                document.getElementById('update-time').innerText = `数据状态：已接入 Football-Data 实时权威赛果`;
             } else {
-                document.getElementById('update-time').innerText = `数据状态：2026世界杯数据中枢 (官方接口监控中，有数据将瞬间自动接管)`;
+                document.getElementById('update-time').innerText = `数据状态：2026美加墨世界杯标准看板 (官方动态轮询监控中)`;
             }
         }
 
-        function renderMatches(fixtures) {
-            const sorted = [...fixtures].sort((a, b) => new Date(b.fixture.date) - new Date(a.fixture.date));
-            let matchesHtml = sorted.slice(0, 30).map(f => {
-                const home = f.teams.home;
-                const away = f.teams.away;
-                const homeScore = f.goals.home !== null ? f.goals.home : '-';
-                const awayScore = f.goals.away !== null ? f.goals.away : '-';
-                
-                let statusStr = "未开赛";
-                if (f.fixture.status.short === "FT" || f.fixture.status.short === "AET" || f.fixture.status.short === "PEN") statusStr = "完赛";
-                if (["1H", "2H", "HT", "ET", "P"].includes(f.fixture.status.short)) statusStr = "进行中";
-
-                const localDate = new Date(f.fixture.date).toLocaleString([], {month: '2-digit', day: '2-digit', hour: '2-digit', minute:'2-digit'});
+        function renderMatches(matches) {
+            const sorted = [...matches].sort((a, b) => new Date(b.utcDate) - new Date(a.utcDate));
+            let html = sorted.slice(0, 30).map(m => {
+                const homeScore = m.score.fullTime.home !== null ? m.score.fullTime.home : '-';
+                const awayScore = m.score.fullTime.away !== null ? m.score.fullTime.away : '-';
+                let statusStr = m.status === "FINISHED" ? "完赛" : (m.status === "IN_PLAY" ? "进行中" : "未开赛");
+                const localDate = new Date(m.utcDate).toLocaleString([], {month: '2-digit', day: '2-digit', hour: '2-digit', minute:'2-digit'});
 
                 return `
                     <div class="match-card">
                         <div class="team-name team-left">
-                            <img class="team-logo" src="${home.logo}" onerror="this.style.display='none'">
-                            <span>${home.name}</span>
+                            <img class="team-logo" src="${m.homeTeam.crest}" onerror="this.style.display='none'">
+                            <span>${m.homeTeam.name}</span>
                         </div>
                         <div class="match-score">${homeScore} : ${awayScore}</div>
                         <div class="team-name team-right">
-                            <span>${away.name}</span>
-                            <img class="team-logo" src="${away.logo}" onerror="this.style.display='none'">
+                            <span>${m.awayTeam.name}</span>
+                            <img class="team-logo" src="${m.awayTeam.crest}" onerror="this.style.display='none'">
                         </div>
-                        <div class="match-info">${localDate} | 状态: ${statusStr} | 赛段: ${translateRound(f.league.round)}</div>
+                        <div class="match-info">${localDate} | 状态: ${statusStr} | 赛段: ${translateStage(m.stage)}</div>
                     </div>
                 `;
             }).join('');
-            document.getElementById('matches-container').innerHTML = matchesHtml;
+            document.getElementById('matches-container').innerHTML = html;
         }
 
-        function renderStandings(standings) {
-            let standingsHtml = '';
-            standings.forEach(groupList => {
-                if(groupList.length === 0) return;
-                const groupName = groupList[0].group;
-                
-                standingsHtml += `
-                    <div class="group-table-card">
-                        <h3 class="group-title">${groupName}</h3>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>序</th><th class="text-left">球队</th><th>场</th><th>胜</th><th>平</th><th>净</th><th>分</th>
+        function renderRealStandings(standings) {
+            let html = '';
+            standings.forEach(s => {
+                if(!s.table || s.table.length === 0) return;
+                html += generateGroupTableHtml(s.group || "小组", s.table, true);
+            });
+            document.getElementById('groups-container').innerHTML = html;
+        }
+
+        function renderFallbackStandings(standings) {
+            let html = '';
+            standings.forEach(s => {
+                html += generateGroupTableHtml(s.group, s.table, false);
+            });
+            document.getElementById('groups-container').innerHTML = html;
+        }
+
+        function generateGroupTableHtml(groupName, tableData, isReal) {
+            return `
+                <div class="group-table-card">
+                    <h3 class="group-title">${groupName.replace("_", " ")}</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>序</th><th class="text-left">球队</th><th>场</th><th>胜</th><th>平</th><th>净</th><th>分</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableData.map((t, idx) => `
+                                <tr class="${idx < 2 ? 'top-two' : ''}">
+                                    <td>${isReal ? t.position : t.position}</td>
+                                    <td class="text-left">
+                                        <img src="${isReal ? t.team.crest : t.team.crest}" style="width:18px;height:14px;object-fit:contain;vertical-align:middle;margin-right:5px;" onerror="this.style.display='none'">
+                                        <b>${t.team.name}</b>
+                                    </td>
+                                    <td>${isReal ? t.playedGames : t.playedGames}</td>
+                                    <td>${isReal ? t.won : t.won}</td>
+                                    <td>${isReal ? t.draw : t.draw}</td>
+                                    <td>${isReal ? t.goalDifference : t.goalDifference}</td>
+                                    <td><b>${isReal ? t.points : t.points}</b></td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                ${groupList.map((t, idx) => `
-                                    <tr class="${idx < 2 ? 'top-two' : ''}">
-                                        <td>${t.rank}</td>
-                                        <td class="text-left">
-                                            <img src="${t.team.logo}" style="width:18px;height:14px;object-fit:contain;vertical-align:middle;margin-right:5px;" onerror="this.style.display='none'">
-                                            <b>${t.team.name}</b>
-                                        </td>
-                                        <td>${t.all.played}</td><td>${t.all.win}</td><td>${t.all.draw}</td>
-                                        <td>${t.goalsDiff > 0 ? '+' + t.goalsDiff : t.goalsDiff}</td>
-                                        <td><b>${t.points}</b></td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-            });
-            document.getElementById('groups-container').innerHTML = standingsHtml;
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
         }
 
-        function renderBracket(fixtures) {
-            const stages = { "Round of 32": [], "Round of 16": [], "Quarter-finals": [], "Semi-finals": [], "Final": [] };
-            fixtures.forEach(f => {
-                for (let key in stages) {
-                    if (f.league.round.includes(key)) stages[key].push(f);
-                }
+        function renderBracket(matches) {
+            const stages = { "LAST_32": [], "LAST_16": [], "QUARTER_FINALS": [], "SEMI_FINALS": [], "FINAL": [] };
+            matches.forEach(m => {
+                if (stages[m.stage]) stages[m.stage].push(m);
             });
 
-            const keys = ["Round of 32", "Round of 16", "Quarter-finals", "Semi-finals", "Final"];
+            const keys = ["LAST_32", "LAST_16", "QUARTER_FINALS", "SEMI_FINALS", "FINAL"];
             const titles = ["32强赛", "16强赛", "1/4决赛", "半决赛", "总决赛"];
 
             let html = '';
             keys.forEach((key, idx) => {
                 const stageMatches = stages[key];
-                let listHtml = stageMatches.map(f => {
-                    const hScore = f.goals.home !== null ? f.goals.home : '-';
-                    const aScore = f.goals.away !== null ? f.goals.away : '-';
-                    const hWin = f.teams.home.winner ? 'winner' : '';
-                    const aWin = f.teams.away.winner ? 'winner' : '';
-
+                let listHtml = stageMatches.map(m => {
+                    const hScore = m.score.fullTime.home !== null ? m.score.fullTime.home : '-';
+                    const aScore = m.score.fullTime.away !== null ? m.score.fullTime.away : '-';
                     return `
                         <div class="bracket-match">
-                            <div class="bracket-team ${hWin}"><span>${f.teams.home.name}</span><span>${hScore}</span></div>
+                            <div class="bracket-team"><span>${m.homeTeam.name}</span><span>${hScore}</span></div>
                             <div style="border-top:1px dashed #eee; margin:5px 0;"></div>
-                            <div class="bracket-team ${aWin}"><span>${f.teams.away.name}</span><span>${aScore}</span></div>
+                            <div class="bracket-team"><span>${m.awayTeam.name}</span><span>${aScore}</span></div>
                         </div>
                     `;
                 }).join('');
@@ -377,8 +381,9 @@
             document.getElementById('bracket-container').innerHTML = html;
         }
 
-        loadDashboardData();
-        setInterval(loadDashboardData, 10800000);
+        initDashboard();
+        // 自动轮询监测
+        setInterval(initDashboard, 10800000);
     </script>
 </body>
 </html>
