@@ -97,7 +97,7 @@
         }
         .match-info { font-size: 0.85rem; color: #666; grid-column: span 3; margin-top: 8px; border-top: 1px solid #f0f0f0; padding-top: 6px; }
 
-        /* 积分榜响应式网格 */
+        /* 积分榜网格 */
         .groups-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
@@ -127,7 +127,7 @@
         .text-left { text-align: left; }
         .top-two { background-color: rgba(46, 125, 50, 0.04); }
 
-        /* 淘汰赛树状对阵图 */
+        /* 淘汰赛对阵 */
         .bracket-container { overflow-x: auto; white-space: nowrap; padding: 20px 0; }
         .stage-column { display: inline-block; vertical-align: top; width: 240px; margin-right: 25px; }
         .stage-title { text-align: center; font-weight: bold; margin-bottom: 15px; background: var(--secondary-color); color: white; padding: 6px; border-radius: 4px; font-size: 0.9rem;}
@@ -148,7 +148,7 @@
 
     <header>
         <h1>2026 FIFA 美加墨世界杯动态数据看板</h1>
-        <div class="update-time" id="update-time">正在连接 API-Football 数据源...</div>
+        <div class="update-time" id="update-time">正在连接 API-Sports 数据源...</div>
     </header>
 
     <nav class="tabs">
@@ -172,16 +172,16 @@
     </div>
 
     <script>
-        // ==================== 🛠️ API-FOOTBALL 密钥配置已完成 🛠️ ====================
-        const RAPIDAPI_KEY = "03628653a4f0fd7f8ee38be0585effb8"; 
-        const LEAGUE_ID = 1; // 世界杯在该 API 中的固定 ID
+        // ==================== 🛠️ 针对 API-Sports 官方原版通道进行了精准订正 🛠️ ====================
+        const APISPORTS_KEY = "03628653a4f0fd7f8ee38be0585effb8"; 
+        const LEAGUE_ID = 1; 
         const SEASON = 2026;
 
+        // 切换为官方独立服务器鉴权响应头
         const headers = {
-            "x-rapidapi-key": RAPIDAPI_KEY,
-            "x-rapidapi-host": "api-football-v1.p.rapidapi.com"
+            "x-apisports-key": APISPORTS_KEY
         };
-        const BASE_URL = "https://api-football-v1.p.rapidapi.com/v3";
+        const BASE_URL = "https://v3.football.api-sports.io";
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -200,7 +200,6 @@
             return round;
         }
 
-        // 1. 拉取赛果和淘汰赛
         async function fetchMatches() {
             try {
                 const response = await fetch(`${BASE_URL}/fixtures?league=${LEAGUE_ID}&season=${SEASON}`, { headers });
@@ -208,7 +207,7 @@
                 const fixtures = resData.response || [];
 
                 if (fixtures.length === 0) {
-                    document.getElementById('matches-container').innerHTML = "<p style='text-align:center; padding:30px 0; color:#666;'>API-Football 数据源中暂未生成2026世界杯实时赛程数据。</p>";
+                    document.getElementById('matches-container').innerHTML = "<p style='text-align:center; padding:30px 0; color:#666;'>API-Sports 数据库目前已对接，2026世界杯赛程一旦由官方开始录入，这里会立即呈现。</p>";
                     return;
                 }
 
@@ -245,15 +244,14 @@
                 
                 document.getElementById('matches-container').innerHTML = matchesHtml;
                 renderBracket(fixtures);
-                document.getElementById('update-time').innerText = `数据状态：已成功连接 API-Football 实时同步 (自动刷新中)`;
+                document.getElementById('update-time').innerText = `API-Sports 全线连通状态：数据成功实时对齐`;
 
             } catch (error) {
                 console.error(error);
-                document.getElementById('matches-container').innerHTML = "<p style='color:red; text-align:center; padding:20px;'>数据加载失败，请确认您的 RapidAPI 账户是否成功订阅了此赛事套餐。</p>";
+                document.getElementById('matches-container').innerHTML = "<p style='color:red; text-align:center; padding:20px;'>连接 API-Sports 遭遇网络故障，请稍后刷新。</p>";
             }
         }
 
-        // 2. 拉取积分榜
         async function fetchStandings() {
             try {
                 const response = await fetch(`${BASE_URL}/standings?league=${LEAGUE_ID}&season=${SEASON}`, { headers });
@@ -301,19 +299,15 @@
 
             } catch (error) {
                 console.error(error);
-                document.getElementById('groups-container').innerHTML = "<p style='text-align:center; padding:20px;'>积分榜加载时遇到错误。</p>";
+                document.getElementById('groups-container').innerHTML = "<p style='text-align:center; padding:20px;'>积分榜同步异常。</p>";
             }
         }
 
-        // 3. 渲染淘汰赛对阵图
         function renderBracket(fixtures) {
             const stages = { "Round of 32": [], "Round of 16": [], "Quarter-finals": [], "Semi-finals": [], "Final": [] };
-            
             fixtures.forEach(f => {
                 for (let key in stages) {
-                    if (f.league.round.includes(key)) {
-                        stages[key].push(f);
-                    }
+                    if (f.league.round.includes(key)) stages[key].push(f);
                 }
             });
 
@@ -358,7 +352,6 @@
         }
 
         init();
-        // 每3小时自动更新一次数据
         setInterval(init, 10800000);
     </script>
 </body>
